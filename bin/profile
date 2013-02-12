@@ -32,6 +32,29 @@ try:
 except ImportError:
     import json
 
+def get_career_profile(battletag):
+    """Get users entire career profile"""
+
+    battletag_name, battletag_id = user_id.split('#')
+    try:
+        battletag_id = int(battletag_id)
+    except ValueError:
+        print "Please supply the battletag in the form <User>#<code>. For example Straton-1."
+        sys.exit(1)
+    request = urllib2.Request('http://us.battle.net/api/d3/profile/%s-%i/' % (battletag_name, battletag_id))
+    opener = urllib2.build_opener()
+    f = opener.open(request)
+    return json.load(f)
+   
+def get_heroes(career):
+    """Get the heroes from the supplied career"""
+
+    hero_list = {}
+    for i in career['heroes']:
+        hero_list[i['name']] = i['id']
+
+    return hero_list
+
 if __name__ == "__main__":
 
     cmd_parser = argparse.ArgumentParser(
@@ -42,6 +65,8 @@ if __name__ == "__main__":
         nargs='*', help='Specify which attributes to pull/compare. If not supplied, all attributes will be supplied for the first Hero found in the profile')
     cmd_parser.add_argument('-H', '--hero', dest='heros', action='append',
         nargs='*', help='Specify which hero(s) to parse/display.')
+    cmd_parser.add_argument('-s', '--slots', dest='item_slots', action='append',
+        nargs='*', help='Specify what specific slot to inspect.')
     args = cmd_parser.parse_args()
 
     #sanitize our inputs, since users can be supplied in multiple ways
@@ -69,21 +94,23 @@ if __name__ == "__main__":
             for i in args.heros:
                 heros.append(i[0])
 
-    #iterate over the supplied users
-    profiles = {}
-    for user_id in users:
-        profiles[user_id] = {}
-        battletag_name, battletag_id = user_id.split('#')
-        try:
-            battletag_id = int(battletag_id)
-        except ValueError:
-            print "Please supply the battletag in the form <User>#<code>. For example Straton-1."
-            sys.exit(1)
-        request = urllib2.Request('http://us.battle.net/api/d3/profile/%s-%i/' % (battletag_name, battletag_id))
-        opener = urllib2.build_opener()
-        f = opener.open(request)
-        profiles[user_id] = json.load(f)
+    if args.item_slots:
+        if len(args.item_slots) < 2:
+            item_slots= args.item_slots[0]
+        else:
+            item_slots = []
+            for i in args.item_slots:
+                item_slots.append(i[0])
 
-    for battletag in profiles:
+    #iterate over the supplied users
+    heroes = {}
+    careers = {}
+    for user_id in users:
+        careers[user_id] = get_career_profile(user_id)
+        heroes[user_id] = get_heroes(careers[user_id])
+        print heroes[user_id]
+ 
+    for battletag in careers:
         print battletag
-        print profiles[battletag]
+        for i in careers[battletag]:
+            print i
