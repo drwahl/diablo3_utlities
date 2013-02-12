@@ -1,0 +1,89 @@
+#!/usr/bin/env python
+# vim: set expandtab:
+"""
+**********************************************************************
+GPL License
+***********************************************************************
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+***********************************************************************/
+
+:author: David Wahlstrom
+:email: david.wahlstrom@gmail.com
+
+"""
+
+import argparse
+import urllib2
+import sys
+try:
+    import simplejson as json
+except ImportError:
+    import json
+
+if __name__ == "__main__":
+
+    cmd_parser = argparse.ArgumentParser(
+        description='Access Diablo 3 player profiles from commandline.')
+    cmd_parser.add_argument('-u', '--user', dest='users', action='append',
+        nargs='*', help='User profile(s) to scrape. Multiple users can be supplied to be used for comparison. Both BattleTag name and BattleTag code need to be supplied (i.e. Straton-1).')
+    cmd_parser.add_argument('-a', '--attributes', dest='attributes', action='append',
+        nargs='*', help='Specify which attributes to pull/compare. If not supplied, all attributes will be supplied for the first Hero found in the profile')
+    cmd_parser.add_argument('-H', '--hero', dest='heros', action='append',
+        nargs='*', help='Specify which hero(s) to parse/display.')
+    args = cmd_parser.parse_args()
+
+    #sanitize our inputs, since users can be supplied in multiple ways
+    if args.users:
+        if len(args.users) < 2:
+            users = args.users[0]
+        else:
+            users = []
+            for i in args.users:
+                users.append(i[0])
+
+    if args.attributes:
+        if len(args.attributes) < 2:
+            attributes = args.attributes[0]
+        else:
+            attributes = []
+            for i in args.attributes:
+                attributes.append(i[0])
+
+    if args.heros:
+        if len(args.heros) < 2:
+            heros = args.heros[0]
+        else:
+            heros = []
+            for i in args.heros:
+                heros.append(i[0])
+
+    #iterate over the supplied users
+    profiles = {}
+    for user_id in users:
+        profiles[user_id] = {}
+        battletag_name, battletag_id = user_id.split('#')
+        try:
+            battletag_id = int(battletag_id)
+        except ValueError:
+            print "Please supply the battletag in the form <User>#<code>. For example Straton-1."
+            sys.exit(1)
+        request = urllib2.Request('http://us.battle.net/api/d3/profile/%s-%i/' % (battletag_name, battletag_id))
+        opener = urllib2.build_opener()
+        f = opener.open(request)
+        profiles[user_id] = json.load(f)
+
+    for battletag in profiles:
+        print battletag
+        print profiles[battletag]
