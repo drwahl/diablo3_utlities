@@ -1,0 +1,27 @@
+#!/bin/bash
+
+case $1 in
+    us|US|Americas|americas)
+        loc=Americas
+        ;;
+    eu|EU|Europe|europe)
+        loc=Europe
+        ;;
+    Asia|asia)
+        loc=Asia
+        ;;
+    *)
+        loc=Americas
+        ;;
+esac
+    
+server_status=`curl -s http://us.battle.net/d3/en/status -o - | grep -A 4 ">$loc<" | tail -1 | cut -d"=" -f3 | cut -d\" -f2`
+
+case $server_status in
+    Maintenance)
+        echo -e "\e[00;31mMaintenance\e[00m"
+        ;;
+    Available)
+        echo -e "\e[00;36mAvailable\e[00m"
+        ;;
+esac
