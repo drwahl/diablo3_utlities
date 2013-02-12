@@ -1,4 +1,27 @@
 #!/bin/bash
+"""
+**********************************************************************
+GPL License
+***********************************************************************
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+***********************************************************************/
+
+:author: David Wahlstrom
+:email: david.wahlstrom@gmail.com
+
+"""
 
 case $1 in
     us|US|Americas|americas)
@@ -20,8 +43,10 @@ server_status=`curl -s http://us.battle.net/d3/en/status -o - | grep -A 4 ">$loc
 case $server_status in
     Maintenance)
         echo -e "\e[00;31mMaintenance\e[00m"
+        exit 1
         ;;
     Available)
         echo -e "\e[00;36mAvailable\e[00m"
+        exit 0
         ;;
 esac
